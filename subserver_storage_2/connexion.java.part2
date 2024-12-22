@@ -1,0 +1,3 @@
+L = "jdbc:oracle:thin:@localhost:1521/orcl";  
+    private static final String USERNAME = "scott"; 
+    private static final String PASSWORD = "tiger";

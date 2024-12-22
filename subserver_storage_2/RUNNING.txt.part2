@@ -1,0 +1,178 @@
+res:
+
+ *  better protection against duplicate start attempts and
+ *  allows forceful termination of Tomcat process when it does not react to
+    the standard shutdown command.
+
+
+(3.4) Using the "setenv" script (optional, recommended)
+
+Apart from CATALINA_HOME and CATALINA_BASE, all environment variables can
+be specified in the "setenv" script. The script is placed either into
+CATALINA_BASE/bin or into CATALINA_HOME/bin directory and is named
+setenv.bat (on Windows) or setenv.sh (on *nix). The file has to be
+readable.
+
+By default the setenv script file is absent. If the script file is present
+both in CATALINA_BASE and in CATALINA_HOME, the one in CATALINA_BASE is
+preferred.
+
+For example, to configure the JRE_HOME and CATALINA_PID variables you can
+create the following script file:
+
+On Windows, %CATALINA_BASE%\bin\setenv.bat:
+
+  set "JRE_HOME=%ProgramFiles%\Java\jre8"
+  exit /b 0
+
+On *nix, $CATALINA_BASE/bin/setenv.sh:
+
+  JRE_HOME=/usr/java/latest
+  CATALINA_PID="/run/tomcat.pid"
+
+
+The CATALINA_HOME and CATALINA_BASE variables cannot be configured in the
+setenv script, because they are used to locate that file.
+
+All the environment variables described here and the "setenv" script are
+used only if you use the standard scripts to launch Tomcat. For example, if
+you have installed Tomcat as a service on Windows, the service wrapper
+launches Java directly and does not use the script files.
+
+
+(4) Start Up Tomcat
+
+(4.1) Tomcat can be started by executing one of the following commands:
+
+  On Windows:
+
+      %CATALINA_HOME%\bin\startup.bat
+
+    or
+
+      %CATALINA_HOME%\bin\catalina.bat start
+
+  On *nix:
+
+      $CATALINA_HOME/bin/startup.sh
+
+    or
+
+      $CATALINA_HOME/bin/catalina.sh start
+
+(4.2) After startup, the default web applications included with Tomcat will be
+      available by visiting:
+
+      http://localhost:8080/
+
+(4.3) Further information about configuring and running Tomcat can be found in
+      the documentation included here, as well as on the Tomcat web site:
+
+      https://tomcat.apache.org/
+
+
+(5) Shut Down Tomcat
+
+(5.1) Tomcat can be shut down by executing one of the following commands:
+
+  On Windows:
+
+      %CATALINA_HOME%\bin\shutdown.bat
+
+    or
+
+      %CATALINA_HOME%\bin\catalina.bat stop
+
+  On *nix:
+
+      $CATALINA_HOME/bin/shutdown.sh
+
+    or
+
+      $CATALINA_HOME/bin/catalina.sh stop
+
+==================================================
+Advanced Configuration - Multiple Tomcat Instances
+==================================================
+
+In many circumstances, it is desirable to have a single copy of a Tomcat
+binary distribution shared among multiple users on the same server.  To make
+this possible, you can set the CATALINA_BASE environment variable to the
+directory that contains the files for your 'personal' Tomcat instance.
+
+When running with a separate CATALINA_HOME and CATALINA_BASE, the files
+and directories are split as following:
+
+In CATALINA_BASE:
+
+ * bin  - Only the following files:
+
+           * setenv.sh (*nix) or setenv.bat (Windows),
+           * tomcat-juli.jar
+
+          The setenv scripts were described above. The tomcat-juli library
+          is documented in the Logging chapter in the User Guide.
+
+ * conf - Server configuration files (including server.xml)
+
+ * lib  - Libraries and classes, as explained below
+
+ * logs - Log and output files
+
+ * webapps - Automatically loaded web applications
+
+ * work - Temporary working directories for web applications
+
+ * temp - Directory used by the JVM for temporary files (java.io.tmpdir)
+
+
+In CATALINA_HOME:
+
+ * bin  - Startup and shutdown scripts
+
+          The following files will be used only if they are absent in
+          CATALINA_BASE/bin:
+
+          setenv.sh (*nix), setenv.bat (Windows), tomcat-juli.jar
+
+ * lib  - Libraries and classes, as explained below
+
+ * endorsed - Libraries that override standard "Endorsed Standards"
+              libraries provided by JRE. See Classloading documentation
+              in the User Guide for details.
+              This is only supported for Java <= 8.
+              By default this "endorsed" directory is absent.
+
+In the default configuration the JAR libraries and classes both in
+CATALINA_BASE/lib and in CATALINA_HOME/lib will be added to the common
+classpath, but the ones in CATALINA_BASE will be added first and thus will
+be searched first.
+
+The idea is that you may leave the standard Tomcat libraries in
+CATALINA_HOME/lib and add other ones such as database drivers into
+CATALINA_BASE/lib.
+
+In general it is advised to never share libraries between web applications,
+but put them into WEB-INF/lib directories inside the applications. See
+Classloading documentation in the User Guide for details.
+
+
+It might be useful to note that the values of CATALINA_HOME and
+CATALINA_BASE can be referenced in the XML configuration files processed
+by Tomcat as ${catalina.home} and ${catalina.base} respectively.
+
+For example, the standard manager web application can be kept in
+CATALINA_HOME/webapps/manager and loaded into CATALINA_BASE by copying
+its deployment descriptor into the desired virtual host:
+
+ * Copy the CATALINA_HOME/webapps/manager/META-INF/context.xml
+   file as CATALINA_BASE/conf/Catalina/localhost/manager.xml
+
+ * Add docBase attribute as shown below.
+
+The file will look like the following:
+
+  <?xml version="1.0" encoding="UTF-8"?>
+  <Context docBase="${catalina.home}/webapps/manager"
+    antiResourceLocking="false" privileged="true" >
+    <Valve className="org.apache.ca
